@@ -1,54 +1,59 @@
 #include <iostream>
 #include <vector>
-#include <algorithm>
 #include <string>
+#include <utility>
 
 using namespace std;
 
 void countSort(vector<pair<string, string>> &v)
 {
-    if (v.size() == 0)
+    if (v.empty())
         return;
 
-    int min = stoi(v[0].first);
-    int max = stoi(v[0].first);
-
-    for (pair<string, string> &p : v)
+    vector<int> keys;
+    keys.reserve(v.size());
+    for (const pair<string, string> &p : v)
     {
-        int key = stoi(p.first);
-        if (key < min)
-            min = key;
-        if (key > max)
-            max = key;
+        keys.push_back(stoi(p.first));
     }
 
-    vector<int> count(max - min + 1, 0);
-
-    for (pair<string, string> &p : v)
+    int min_val = keys[0];
+    int max_val = keys[0];
+    for (int key : keys)
     {
-        int key = stoi(p.first);
-        count[key - min]++;
+        if (key < min_val)
+            min_val = key;
+        if (key > max_val)
+            max_val = key;
     }
 
-    for (int i = 1; i < count.size(); i++)
+    vector<int> count(max_val - min_val + 1, 0);
+
+    for (int key : keys)
+    {
+        count[key - min_val]++;
+    }
+
+    for (int i = 1; i < count.size(); ++i)
     {
         count[i] += count[i - 1];
     }
 
     vector<pair<string, string>> res(v.size());
-
-    for (int i = v.size() - 1; i >= 0; i--)
+    for (int i = v.size() - 1; i >= 0; --i)
     {
-        int key = stoi(v[i].first);
-        count[key - min]--;
-        res[count[key - min]] = v[i];
+        int key = keys[i];
+        res[--count[key - min_val]] = move(v[i]);
     }
 
-    v = res;
+    v = move(res);
 }
 
 int main()
 {
+    ios_base::sync_with_stdio(false);
+    cin.tie(nullptr);
+
     vector<pair<string, string>> v;
     string line;
 
@@ -58,17 +63,16 @@ int main()
         if (tabPos == string::npos)
             continue;
 
-        string key = line.substr(0, tabPos);
-        string value = line.substr(tabPos + 1);
-
-        v.push_back({key, value});
+        v.emplace_back(
+            line.substr(0, tabPos),
+            line.substr(tabPos + 1));
     }
 
     countSort(v);
 
-    for (pair<string, string> &p : v)
+    for (const pair<string, string> &p : v)
     {
-        cout << p.first << "\t" << p.second << endl;
+        cout << p.first << '\t' << p.second << '\n';
     }
 
     return 0;
